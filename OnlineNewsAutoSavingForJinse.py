@@ -3,7 +3,11 @@ from bs4 import BeautifulSoup
 import re
 import schedule
 import time
-
+import pandas as pd
+from openpyxl import Workbook
+import csv
+from openpyxl import Workbook
+import subprocess
 
 def getNewsInfoOnline():
     newsInfo = [['Time','Title','Source','Summary']]
@@ -17,7 +21,7 @@ def getNewsInfoOnline():
     p_info4 = '</span></a> (.*?)<span class="js-article_item__foot--pageview" data-v-a31badcc>'
     info4 = re.findall(p_info4, res1, re.S)
     pattern4 = r'<p class="js-article_item__des" data-v-a31badcc>\s+(.*?)\s+</p></div> <div class="js-article_item__foot" data-v-a31badcc><a href="/member/.*?" title=".*?" target="_blank" class="js-article_item__foot-author" data-v-a31badcc>\s+(.*?)\s+</a> <span class="js-article_item__foot--time" data-v-a31badcc> · (.*?)</span>'
-
+            
     for article in info1:
         match = re.search(pattern1, article)
         if match:
@@ -44,7 +48,7 @@ def getNewsInfoOnline():
     res2 = requests.get(url2, headers=headers).text
     p_info2 = '<div class="time">\n\n (.*?)</a> <!----></div> <!----> <!----> <!---->'
     info2 = re.findall(p_info2, res2, re.S)
-    pattern2 = r'(.*?)\n\s+</div> <div class="content"><!----> <a href="(.*?)" target="_blank" class="title"><!---->\n\s+(.*?)\n\s+</a> <!----> <a href=".*?" target="_blank" style="color: #767680">(.*?)</a>'
+    pattern2 = r'(.*?)\n\s+</div> <div class="content"><!----> <a href="(.*?)" target="_blank" class="title"><!---->\n\s+(.*?)\n\s+</a> <!----> <a href=".*?" target="_blank" style="color: #.*?">(.*?)</a>'
     for article in info2:
         match = re.search(pattern2, article)
         if match:
@@ -67,24 +71,39 @@ def getNewsInfoOnline():
         title = article.strip()
         print(f'Title: {title}')
         print()
-        newsInfo.append([None,title,None,None])
+        newsInfo.append([None,title,None,None])  
 
+    filename = 'output.xlsx'
+# 创建一个新的工作簿
+    workbook = Workbook()
+    sheet = workbook.active
 
-    import csv
-    # 设置保存文件路径和文件名
-    csv_file = 'output.csv'
-
-    # 打开 CSV 文件并写入数据
-    with open(csv_file, 'w', newline='') as file:
+# 将2D列表的数据写入工作表
+    with open('output.csv', 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerows(newsInfo)
+        for row in newsInfo:
+            writer.writerow(row)
 
-    print("输出已保存为 CSV 文件：", csv_file)
+# 从CSV文件中读取数据并将其写入Excel工作表
+    with open('output.csv', 'r') as file:
+        reader = csv.reader(file)
+        for row_index, row in enumerate(reader, start=1):
+            for column_index, value in enumerate(row, start=1):
+                sheet.cell(row=row_index, column=column_index).value = value
 
-schedule.every(0.01).hours.do(getNewsInfoOnline)  # 每隔##小时执行一次爬虫
+    for column_cells in sheet.columns:
+        length = max(len(str(cell.value)) for cell in column_cells)
+        sheet.column_dimensions[column_cells[0].column_letter].width = length + 2
+
+    # 保存Excel文件
+    workbook.save(filename)
+    filename = 'output.xlsx'
+    subprocess.Popen(['open', filename])
+
+schedule.every(0.0001).hours.do(getNewsInfoOnline)  # 每隔##小时执行一次爬虫
 
 while True:
     schedule.run_pending()
-    time.sleep(0.01)
+    time.sleep(0.001)
 
 
