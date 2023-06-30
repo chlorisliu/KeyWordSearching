@@ -6,7 +6,6 @@ import time
 import pandas as pd
 from openpyxl import Workbook
 import csv
-from openpyxl import Workbook
 import subprocess
 
 def getNewsInfoOnline():
@@ -48,20 +47,19 @@ def getNewsInfoOnline():
     res2 = requests.get(url2, headers=headers).text
     p_info2 = '<div class="time">\n\n (.*?)</a> <!----></div> <!----> <!----> <!---->'
     info2 = re.findall(p_info2, res2, re.S)
-    pattern2 = r'(.*?)\n\s+</div> <div class="content"><!----> <a href="(.*?)" target="_blank" class="title"><!---->\n\s+(.*?)\n\s+</a> <!----> <a href=".*?" target="_blank" style="color: #.*?">(.*?)</a>'
-    for article in info2:
-        match = re.search(pattern2, article)
-        if match:
-            time = match.group(1).strip()
-            href = match.group(2)
-            title = match.group(3)
-            summary = match.group(4).strip()
-            print(f'Time: {time}')
-            print(f'Title: {title}')
-            print(f'Source: {href}')
-            print(f'Summary: {summary}')
-            print()
-            newsInfo.append([time,title,href,summary])
+    pattern = r'(\d{2}:\d{2})\s*</div> <div class="content"><!----> <a href="(/lives/\d+\.html)" target="_blank" class="title"><!---->\s*([\s\S]+?)\s*</a> <!----> <a href="/lives/\d+\.html" target="_blank" style="color: #767680">(.+?)</a>'
+    matches = re.findall(pattern, res2)
+    for match in matches:
+        time = match[0]
+        href = match[1]
+        title = match[2]
+        summary = match[3]
+        print("Time:", time)
+        print("Herf:", href)
+        print("Title:", title)
+        print("Summary:", summary)
+        print()
+        newsInfo.append([time,title,href,summary])
         
     url3 = "https://www.jinse.cn/industry"
     res3 = requests.get(url3, headers=headers).text
@@ -72,6 +70,32 @@ def getNewsInfoOnline():
         print(f'Title: {title}')
         print()
         newsInfo.append([None,title,None,None])  
+    
+    url5 = "https://www.panewslab.com/"
+    response = requests.get(url5)
+    html_content = response.text
+
+    # 使用BeautifulSoup解析HTML
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    # 找到所有带有href属性的a标签
+    a_tags = soup.find_all("a", href=True)
+
+    # 遍历a标签并提取标题和href信息
+    for a in a_tags:
+        # 提取标题
+        title = a.get_text().strip()
+        
+        # 提取href
+        href = a["href"]
+        if(len(title) <= 12):
+            pass
+        else:
+            print("Title:", title)
+            print("Herf:", href)
+            print()
+    newsInfo.append([None,title,href,None])  
+
 
     filename = 'output.xlsx'
 # 创建一个新的工作簿
