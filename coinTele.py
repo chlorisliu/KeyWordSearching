@@ -10,7 +10,7 @@ import csv
 import subprocess
 
 
-chrome_driver_path = '/Users/chlorisliu/Downloads/chromedriver_mac_arm64'
+chrome_driver_path = '/Users/chlorisliu/Downloads/chromedriver_mac_arm64' ###local path
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('log-level=3')
@@ -57,12 +57,12 @@ if __name__ == '__main__':
     browser.get(url)
 
     for i in tqdm(range(0, int(num_pages))):
-        time.sleep(3)
+        time.sleep(2)
         browser.execute_script("scrollBy(0,10000);")
         button = browser.find_element(By.CLASS_NAME,"posts-listing__more-wrp")
         ActionChains(browser).click(button).perform()
 
-    time.sleep(3)
+    time.sleep(2)
     news_titles = browser.find_elements(By.CLASS_NAME,"post-card-inline__content")
 
     news = [['titleText', 'articleDate', 'authorProfile', 'authorName', 'Summary', 'Views', 'URL']]
@@ -71,14 +71,14 @@ if __name__ == '__main__':
         articleDate = get_date(item)
         authorProfile = get_author_profile(item)
         authorName = get_author(item)
-        S = summary_text(item)
+        summary = summary_text(item)
         views = get_views(item)
         url = get_news_url(item)
         info = [titleText,
                 articleDate,
                 authorProfile,
                 authorName,
-                S,
+                summary,
                 views,
                 url]
 
